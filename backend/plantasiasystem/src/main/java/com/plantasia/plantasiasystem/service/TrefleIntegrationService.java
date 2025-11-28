@@ -20,7 +20,6 @@ public class TrefleIntegrationService {
     }
 
     public Optional<TrefleData> searchForPlant(String name) {
-        // get p/ trefle
         TrefleResponse response = webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .queryParam("token", token)
