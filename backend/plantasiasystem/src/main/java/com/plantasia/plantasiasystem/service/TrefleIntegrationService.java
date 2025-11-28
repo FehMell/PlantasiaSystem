@@ -29,6 +29,9 @@ public class TrefleIntegrationService {
                 .bodyToMono(TrefleResponse.class)
                 .block();
 
-        return Optional.of(response.getData().get(0));
+        if (response != null && response.getData() != null && !response.getData().isEmpty()) {
+            return Optional.of(response.getData().get(0));
+        }
+        return Optional.empty();
     }
 }
