@@ -12,7 +12,7 @@ import java.util.Optional;
 public class TrefleIntegrationService {
     private final WebClient webClient;
 
-    @Value("{trefle.api.token}")
+    @Value("${trefle.api.token}")
     private String token;
 
     public TrefleIntegrationService(WebClient.Builder builder, @Value("${trefle.api.url}") String url) {
