@@ -14,7 +14,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
-function EstatisticasDashboard() { //dados mockados
+function EstatisticasDashboard() { 
   const [dados, setDados] = useState({
     porComodo: {
       labels: ['Sala de estar', 'Quarto', 'Cozinha'],

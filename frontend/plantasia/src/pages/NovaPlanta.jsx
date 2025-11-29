@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPlusCircle, FaLeaf, FaChartBar } from 'react-icons/fa';
+import { FaPlusCircle, FaLeaf, FaChartBar, FaUser } from 'react-icons/fa';
 import plantService from '../services/plantService';
 
 function Jardim() {
   const [plantas, setPlantas] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({ nome: '', especie: '', local: '', descricao: '', imagem: '' });
+  const [form, setForm] = useState({ nickname: '', especie: '', local: '', descricao: '', imagem: '' });
   const [editingIdx, setEditingIdx] = useState(null);
   const [comodos, setComodos] = useState(["Sala de estar", "Quarto", "Cozinha"]);
   const [novoComodo, setNovoComodo] = useState("");
@@ -15,12 +15,21 @@ function Jardim() {
   const [modalEstatisticas, setModalEstatisticas] = useState(false);
   const [filtroComodo, setFiltroComodo] = useState('');
   const [favoritos, setFavoritos] = useState([]);
-  const [notificacoes, setNotificacoes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState('');
 
   // Carregar plantas do backend
   useEffect(() => {
     carregarPlantas();
+  }, []);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('plantasia_user_id');
+    if (userId) {
+      fetch(`http://localhost:8080/api/users/${userId}`)
+        .then(res => res.json())
+        .then(data => setUserName(data.nome || data.name || data.email || 'Usuário'));
+    }
   }, []);
 
   async function carregarPlantas() {
@@ -30,16 +39,15 @@ function Jardim() {
       // Mapear os campos do backend para o frontend
       const plantasFormatadas = plantasData.map(planta => ({
         id: planta.id,
-        nome: planta.nickname,
+        nickname: planta.nickname,
         especie: planta.searchName,
         local: "Sala de estar",
         descricao: "",
-        imagem: ""
+        imagem: planta.imagem || ""
       }));
       setPlantas(plantasFormatadas);
     } catch (error) {
       console.error('Erro ao carregar plantas:', error);
-      setNotificacoes(prev => [...prev, 'Erro ao carregar plantas']);
     } finally {
       setLoading(false);
     }
@@ -55,10 +63,6 @@ function Jardim() {
       : [...favoritos, idx]);
   }
 
-  async function adicionarNotificacao(planta) {
-    setNotificacoes([...notificacoes, `Hora de regar: ${planta.nome}`]);
-  }
-
   async function handleDelete(idx) {
     setConfirmDeleteIdx(idx);
   }
@@ -68,10 +72,8 @@ function Jardim() {
       const plantaId = plantas[confirmDeleteIdx].id;
       await plantService.deletePlant(plantaId);
       setPlantas(plantas.filter((_, i) => i !== confirmDeleteIdx));
-      setNotificacoes(prev => [...prev, 'Planta excluída com sucesso!']);
     } catch (error) {
       console.error('Erro ao excluir planta:', error);
-      setNotificacoes(prev => [...prev, 'Erro ao excluir planta']);
     } finally {
       setConfirmDeleteIdx(null);
     }
@@ -100,7 +102,7 @@ function Jardim() {
         const novasPlantas = [...plantas];
         novasPlantas[editingIdx] = {
           ...plantaAtualizada,
-          nome: plantaAtualizada.nickname,
+          nickname: plantaAtualizada.nickname,
           especie: plantaAtualizada.searchName,
           local: form.local,
           descricao: form.descricao,
@@ -108,26 +110,23 @@ function Jardim() {
         };
         setPlantas(novasPlantas);
         setEditingIdx(null);
-        setNotificacoes(prev => [...prev, 'Planta atualizada com sucesso!']);
       } else {
         // Criar nova planta
         const novaPlanta = await plantService.createPlant(form);
         setPlantas([...plantas, {
           id: novaPlanta.id,
-          nome: novaPlanta.nickname,
+          nickname: novaPlanta.nickname,
           especie: novaPlanta.searchName,
-          local: form.local,
-          descricao: form.descricao,
-          imagem: form.imagem
+          local: novaPlanta.local || form.local,
+          descricao: novaPlanta.descricao || form.descricao,
+          imagem: novaPlanta.imagem || novaPlanta.imageUrl || form.imagem
         }]);
-        setNotificacoes(prev => [...prev, 'Planta adicionada com sucesso!']);
       }
       
-      setForm({ nome: '', especie: '', local: '', descricao: '', imagem: '' });
+      setForm({ nickname: '', especie: '', local: '', descricao: '', imagem: '' });
       setModalOpen(false);
     } catch (error) {
       console.error('Erro ao salvar planta:', error);
-      setNotificacoes(prev => [...prev, 'Erro ao salvar planta']);
     } finally {
       setLoading(false);
     }
@@ -142,18 +141,25 @@ function Jardim() {
     }
   }
 
-  // Limpar notificações após 5 segundos
-  useEffect(() => {
-    if (notificacoes.length > 0) {
-      const timer = setTimeout(() => {
-        setNotificacoes([]);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [notificacoes]);
-
   return (
     <main className="max-w-3xl mx-auto py-10 px-4">
+      <div className="flex justify-end items-center mb-6 gap-4">
+        <span className="flex items-center gap-2 text-[#294D1C] font-medium bg-gray-100 px-4 py-2 rounded-full">
+          <FaUser className="h-4 w-4" />
+          {userName}
+        </span>
+        <button
+          onClick={() => {
+            localStorage.removeItem('plantasia_user_id');
+            localStorage.removeItem('token');
+            window.location.href = '/';
+          }}
+          className="px-5 py-2 rounded-full font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+        >
+          Sair
+        </button>
+      </div>
+
       <section className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold text-[#294D1C]">Jardim</h1>
         <div className="flex gap-4 items-center">
@@ -169,7 +175,7 @@ function Jardim() {
           </select>
           <button 
             onClick={() => {
-              setForm({ nome: '', especie: '', local: '', descricao: '', imagem: '' });
+              setForm({ nickname: '', especie: '', local: '', descricao: '', imagem: '' });
               setModalOpen(true);
               setEditingIdx(null);
             }} 
@@ -183,27 +189,6 @@ function Jardim() {
         </div>
       </section>
 
-      {/* Notificações */}
-      {notificacoes.length > 0 && (
-        <div className="mb-4" aria-live="polite">
-          {notificacoes.map((n, i) => (
-            <div key={i} className="bg-green-100 border border-green-300 text-green-800 rounded-lg px-4 py-2 mb-2 flex items-center justify-between" role="alert">
-              <div className="flex items-center">
-                <span aria-label="Notificação" className="mr-2">🌱</span>
-                <span>{n}</span>
-              </div>
-              <button 
-                onClick={() => setNotificacoes(notificacoes.filter((_, index) => index !== i))}
-                className="text-green-800 hover:text-green-600 ml-4"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-  
       {loading && plantas.length === 0 && (
         <div className="text-center py-10">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#294D1C] mx-auto"></div>
@@ -211,7 +196,6 @@ function Jardim() {
         </div>
       )}
 
-    
       <section>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {plantas.filter(p => !filtroComodo || p.local === filtroComodo).length === 0 ? (
@@ -222,15 +206,15 @@ function Jardim() {
             plantas
               .filter(p => !filtroComodo || p.local === filtroComodo)
               .map((planta, idx) => (
-              <li key={planta.id} className="border border-gray-200 rounded-lg p-5 flex flex-col items-center bg-white relative hover:shadow-md transition-shadow" tabIndex="0" aria-label={`Planta ${planta.nome}`}> 
+              <li key={planta.id} className="border border-gray-200 rounded-lg p-5 flex flex-col items-center bg-white relative hover:shadow-md transition-shadow" tabIndex="0" aria-label={`Planta ${planta.nickname}`}> 
                 <div className="w-32 h-32 mb-3 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
                   {planta.imagem ? (
-                    <img src={planta.imagem} alt={planta.nome} className="object-cover w-full h-full" />
+                    <img src={planta.imagem} alt={planta.nickname} className="object-cover w-full h-full" />
                   ) : (
                     <FaLeaf className="h-12 w-12 text-[#294D1C]" aria-hidden="true" />
                   )}
                 </div>
-                <h2 className="text-xl font-semibold mb-1 text-center">{planta.nome}</h2>
+                <h2 className="text-xl font-semibold mb-1 text-center">{planta.nickname}</h2>
                 <span className="text-gray-500 text-sm mb-1">{planta.especie}</span>
                 <span className="text-gray-400 text-xs mb-1 bg-gray-100 px-2 py-1 rounded-full">{planta.local}</span>
                 {planta.descricao && (
@@ -240,23 +224,16 @@ function Jardim() {
                   <button 
                     onClick={() => toggleFavorito(idx)} 
                     className={`text-yellow-500 bg-gray-100 rounded-full p-2 hover:bg-yellow-100 transition-colors ${favoritos.includes(idx) ? 'bg-yellow-100' : ''}`} 
-                    aria-label={favoritos.includes(idx) ? `Desfavoritar planta ${planta.nome}` : `Favoritar planta ${planta.nome}`}
+                    aria-label={favoritos.includes(idx) ? `Desfavoritar planta ${planta.nickname}` : `Favoritar planta ${planta.nickname}`}
                   >
                     {favoritos.includes(idx) ? '★' : '☆'}
-                  </button>
-                  <button 
-                    onClick={() => adicionarNotificacao(planta)} 
-                    className="text-blue-500 bg-gray-100 rounded-full p-2 hover:bg-blue-100 transition-colors" 
-                    aria-label={`Notificar rega para ${planta.nome}`}
-                  >
-                    💧
                   </button>
                 </div>
                 <div className="mt-4 flex gap-2">
                   <button 
                     onClick={() => handleEdit(idx)} 
                     className="text-[#294D1C] bg-gray-100 rounded-full px-3 py-2 text-xs font-medium hover:bg-gray-200 transition-colors" 
-                    aria-label={`Editar planta ${planta.nome}`}
+                    aria-label={`Editar planta ${planta.nickname}`}
                     disabled={loading}
                   >
                     Editar
@@ -264,7 +241,7 @@ function Jardim() {
                   <button 
                     onClick={() => handleDelete(idx)} 
                     className="text-red-500 bg-gray-100 rounded-full px-3 py-2 text-xs font-medium hover:bg-gray-200 transition-colors" 
-                    aria-label={`Excluir planta ${planta.nome}`}
+                    aria-label={`Excluir planta ${planta.nickname}`}
                     disabled={loading}
                   >
                     Excluir
@@ -276,15 +253,14 @@ function Jardim() {
         </ul>
       </section>
 
-     
       {modalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-8 w-full max-w-md shadow-lg relative" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <button 
               onClick={() => { 
                 setModalOpen(false); 
                 setEditingIdx(null); 
-                setForm({ nome: '', especie: '', local: '', descricao: '', imagem: '' });
+                setForm({ nickname: '', especie: '', local: '', descricao: '', imagem: '' });
               }} 
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl"
               disabled={loading}
@@ -296,11 +272,11 @@ function Jardim() {
             </h2>
             <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="nome" className="text-sm text-gray-700 font-medium">Apelido da planta *</label>
+                <label htmlFor="nickname" className="text-sm text-gray-700 font-medium">Apelido da planta *</label>
                 <input 
-                  id="nome" 
-                  name="nome" 
-                  value={form.nome} 
+                  id="nickname" 
+                  name="nickname" 
+                  value={form.nickname} 
                   onChange={handleChange} 
                   required 
                   placeholder="Ex: Minha Monstera" 
@@ -391,9 +367,8 @@ function Jardim() {
         </div>
       )}
 
-     
       {modalComodo && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-8 w-full max-w-sm shadow-lg relative text-center" role="dialog" aria-modal="true">
             <button onClick={() => setModalComodo(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl">×</button>
             <h2 className="text-xl font-bold mb-4 text-[#294D1C]">Adicionar novo cômodo</h2>
@@ -411,13 +386,12 @@ function Jardim() {
         </div>
       )}
 
-    
       {confirmDeleteIdx !== null && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-8 w-full max-w-sm shadow-lg relative text-center" role="dialog" aria-modal="true">
             <button onClick={cancelDelete} className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl">×</button>
             <h2 className="text-xl font-bold mb-4 text-red-700">Confirmar exclusão</h2>
-            <p className="mb-6 text-gray-700">Deseja realmente excluir <span className="font-semibold">{plantas[confirmDeleteIdx]?.nome}</span>?</p>
+            <p className="mb-6 text-gray-700">Deseja realmente excluir <span className="font-semibold">{plantas[confirmDeleteIdx]?.nickname}</span>?</p>
             <div className="flex gap-4 justify-center">
               <button onClick={confirmDelete} className="px-5 py-2 rounded-full font-medium bg-red-600 text-white hover:bg-red-700 transition-colors">Excluir</button>
               <button onClick={cancelDelete} className="px-5 py-2 rounded-full font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Cancelar</button>
@@ -426,16 +400,15 @@ function Jardim() {
         </div>
       )}
 
-     
       {modalEstatisticas && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-8 w-full max-w-lg shadow-lg relative text-center" role="dialog" aria-modal="true">
             <button onClick={() => setModalEstatisticas(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl">×</button>
             <h2 className="text-2xl font-bold mb-4 text-[#294D1C] flex items-center justify-center gap-2">
               <FaChartBar className="h-6 w-6" /> Estatísticas do seu Jardim
             </h2>
             <div className="mb-6">
-              <p className="text-green-700 font-semibold mb-2">🌱 Seu jardim está crescendo!</p>
+              <p className="text-green-700 font-semibold mb-2">Seu jardim está crescendo!</p>
               <p className="text-gray-600">Você tem <span className="font-bold text-[#294D1C]">{plantas.length}</span> plantas em <span className="font-bold text-[#294D1C]">{comodos.length}</span> cômodos.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -459,20 +432,18 @@ function Jardim() {
               </div>
             </div>
             <div className="mt-6">
-              <p className="text-green-700 italic">Continue cuidando das suas plantas! 🌿</p>
+              <p className="text-green-700 italic">Continue cuidando das suas plantas!</p>
             </div>
           </div>
         </div>
       )}
 
-      
       <div className="mb-8 text-right">
         <button onClick={() => setModalEstatisticas(true)} className="text-[#294D1C] underline underline-offset-4 font-semibold hover:text-green-700 transition-colors">
           Ver estatísticas
         </button>
       </div>
 
-     
       <div className="mt-8 text-sm text-gray-400 flex items-center gap-2 justify-center">
         <div className="w-12 h-px bg-gray-300"></div>
         <span>Plantasia</span>

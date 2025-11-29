@@ -1,16 +1,32 @@
-import { FaHome, FaLeaf, FaBook, FaTint, FaBars, FaUser, FaUserPlus } from 'react-icons/fa';  
-import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { FaHome, FaLeaf, FaBars, FaUser, FaUserPlus } from 'react-icons/fa';  
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 function Nav() {
     const location = useLocation();
     const current = location.pathname;
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
+    const [userEmail, setUserEmail] = useState(null);
+    useEffect(() => {
+      const userId = localStorage.getItem('plantasia_user_id');
+      if (userId) {
+        fetch(`http://localhost:8080/api/users/${userId}`)
+          .then(res => res.json())
+          .then(data => setUserEmail(data.email))
+          .catch(() => setUserEmail(null));
+      }
+    }, [current]);
+
+    function handleLogout() {
+      localStorage.removeItem('plantasia_user_id');
+      localStorage.removeItem('token');
+      setUserEmail(null);
+      navigate('/login');
+    }
     const links = [
       { name: 'Home', href: '/', icon: <FaHome className="h-5 w-5" /> },
       { name: 'Meu Jardim', href: '/nova-planta', icon: <FaLeaf className="h-5 w-5" /> },
-      { name: 'Enciclopédia', href: '/enciclopedia', icon: <FaBook className="h-5 w-5" /> },
-      { name: 'Lembretes de Rega', href: '/lembretes', icon: <FaTint className="h-5 w-5" /> },
     ];
 
     const toggleMenu = () => setIsOpen(!isOpen);
@@ -30,14 +46,28 @@ function Nav() {
                         <img src="/svg-logo.png" alt="Plantasia" className="h-14" />
                     </div>
                     <div className="flex items-center gap-8">
-                        <Link to="/login" className="flex items-center gap-2 text-black font-medium hover:underline">
-                            <FaUser className="h-4 w-4" />
-                            Login
-                        </Link>
-                        <Link to="/registrar" className="flex items-center gap-2 text-black font-medium hover:underline">
-                            <FaUserPlus className="h-4 w-4" />
-                            Registrar
-                        </Link>
+                        {userEmail ? (
+                          <>
+                            <button onClick={handleLogout} className="flex items-center gap-2 text-red-600 font-medium hover:underline">
+                              Sair
+                            </button>
+                            <span className="flex items-center gap-2 text-black font-medium">
+                              <FaUser className="h-4 w-4" />
+                              {userEmail}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <Link to="/login" className="flex items-center gap-2 text-black font-medium hover:underline">
+                                <FaUser className="h-4 w-4" />
+                                Login
+                            </Link>
+                            <Link to="/registrar" className="flex items-center gap-2 text-black font-medium hover:underline">
+                                <FaUserPlus className="h-4 w-4" />
+                                Registrar
+                            </Link>
+                          </>
+                        )}
                     </div>
                 </div>
             </nav>
