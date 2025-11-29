@@ -1,6 +1,6 @@
 // services/plantService.js
 import api from './api';
-import { userService } from './userService';
+import userService from './userService';
 
 let currentUserId = null;
 
