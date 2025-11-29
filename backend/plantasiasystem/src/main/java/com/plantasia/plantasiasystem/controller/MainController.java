@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "") // front-end: inserir URL do react
 public class MainController {
     @Autowired
     private PlantService plantService;
