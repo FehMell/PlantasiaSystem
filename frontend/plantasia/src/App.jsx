@@ -1,9 +1,13 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'; 
 import Home from './pages/Home';
 import Nav from './components/Nav';
-import NovaPlanta from './pages/NovaPlanta';
+import Jardim from './pages/NovaPlanta';
 import Login from './pages/Login';
 import Registrar from './pages/Registrar';
+import Enciclopedia from './pages/Enciclopedia';
+import Lembretes from './pages/Lembretes';
+import Estatisticas from './pages/Estatisticas';
+import EstatisticasDashboard from './pages/EstatisticasDashboard';
 
 function App() {
     return (
@@ -13,10 +17,10 @@ function App() {
         <main className="relative">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/nova-planta" element={<NovaPlanta />} />
-            <Route path="/enciclopedia" element={<div className="p-6"><h1 className="text-2xl font-bold">Enciclopédia</h1><p>Descubra informações sobre diferentes tipos de plantas.</p></div>} />
-            <Route path="/lembretes" element={<div className="p-6"><h1 className="text-2xl font-bold">Lembretes de Rega</h1><p>Gerencie seus lembretes de cuidados com as plantas.</p></div>} />
-            <Route path="/estatisticas" element={<div className="p-6"><h1 className="text-2xl font-bold">Estatísticas</h1><p>Veja estatísticas do seu jardim.</p></div>} />
+            <Route path="/nova-planta" element={<Jardim />} />
+            <Route path="/enciclopedia" element={<Enciclopedia />} />
+            <Route path="/lembretes" element={<Lembretes />} />
+            <Route path="/estatisticas" element={<EstatisticasDashboard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/registrar" element={<Registrar />} />
           </Routes>

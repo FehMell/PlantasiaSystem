@@ -19,20 +19,19 @@ function Home(){
                         </div>
                         
                         <Link 
-                            to="/nova-planta"
+                            to="/registrar"
                             className="inline-flex items-center px-8 py-4 text-white font-medium rounded-full hover:shadow-lg transition-all duration-300 transform hover:scale-105"
                             style={{backgroundColor: '#294D1C'}}
                         >
-                            Adicionar Planta
+                            Registre-se
                             <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                             </svg>
                         </Link>
-                        
-                        <div className="flex items-center gap-2 text-sm text-gray-400 mt-8">
-                            <div className="w-12 h-px bg-gray-300"></div>
-                            <span>Plantasia</span>
-                            <div className="w-12 h-px bg-gray-300"></div>
+                        <div className="mt-1">
+                          <Link to="/login" className="text-sm text-gray-600 underline underline-offset-4 hover:text-green-700">
+                            Entrar na minha conta
+                          </Link>
                         </div>
                     </div>
                     
