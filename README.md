@@ -8,7 +8,8 @@ O **Plantasia** é uma plataforma web desenvolvida para facilitar o gerenciament
 
 - **Backend:** Java 21, Spring Boot (Web, Data JPA e Lombok)  
 - **Banco de Dados:** H2 Database (Desenvolvimento)  
-- **Frontend:** HTML5, CSS3, JavaScript (JSX), React e Tailwind  
+- **Frontend:** HTML5, CSS3, JavaScript (JSX), React e Tailwind
+- **API Externa:** Trefle.io API para dados botânicos
 
 ---
 
@@ -26,4 +27,6 @@ O **Plantasia** é uma plataforma web desenvolvida para facilitar o gerenciament
 - Edição de plantas já cadastradas  
 - Exclusão de plantas  
 - Notificações de rega  
-- Estatísticas do jardim  
+- Estatísticas do jardim
+- Integração com Trefle.io API para obter informações detalhadas sobre espécies de plantas
+- Favoritar plantas
